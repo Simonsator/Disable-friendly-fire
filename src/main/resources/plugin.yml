@@ -2,3 +2,4 @@ main: de.simonsator.disablefriendlyfire.DFFMain
 name: DisableFriendlyFire
 version: ${project.version}
 author: Simonsator
+depend: [FriendsAPIForPartyAndFriends]
