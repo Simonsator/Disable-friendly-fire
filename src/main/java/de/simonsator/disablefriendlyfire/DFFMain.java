@@ -10,7 +10,9 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author simonbrungs
@@ -19,6 +21,7 @@ import java.util.Map;
 public class DFFMain extends JavaPlugin implements Listener {
 	private Map<String, Boolean> currentCache = null;
 	private long cacheTimer;
+	private List<String> enabledWorlds = null;
 
 	@Override
 	public void onEnable() {
@@ -26,6 +29,8 @@ public class DFFMain extends JavaPlugin implements Listener {
 		if (getConfig().getBoolean("Cache.Use")) {
 			currentCache = new HashMap<>();
 			cacheTimer = getConfig().getLong("Cache.TimeInSeconds") * 20;
+			if (getConfig().getBoolean("PerWorld.Enabled"))
+				enabledWorlds = getConfig().getStringList("PerWorld.EnabledWorlds");
 		}
 		getServer().getPluginManager().registerEvents(this, this);
 	}
@@ -34,6 +39,10 @@ public class DFFMain extends JavaPlugin implements Listener {
 	public void onPVP(EntityDamageByEntityEvent pEvent) {
 		if (pEvent.getDamager() instanceof Player && pEvent.getEntity() instanceof Player) {
 			Player damager = (Player) pEvent.getDamager();
+			if (enabledWorlds != null) {
+				if (!enabledWorlds.contains(Objects.requireNonNull(damager.getLocation().getWorld()).getName()))
+					return;
+			}
 			Player damaged = (Player) pEvent.getEntity();
 			String firstUUID = String.valueOf(damager.getUniqueId());
 			String secondUUID = String.valueOf(damaged.getUniqueId());
