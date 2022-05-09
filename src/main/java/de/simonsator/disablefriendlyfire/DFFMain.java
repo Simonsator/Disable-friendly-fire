@@ -4,10 +4,13 @@ import de.simonsator.partyandfriends.spigot.api.pafplayers.PAFPlayer;
 import de.simonsator.partyandfriends.spigot.api.pafplayers.PAFPlayerManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.HashMap;
 import java.util.List;
@@ -37,13 +40,23 @@ public class DFFMain extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onPVP(EntityDamageByEntityEvent pEvent) {
-		if (pEvent.getDamager() instanceof Player && pEvent.getEntity() instanceof Player) {
-			Player damager = (Player) pEvent.getDamager();
+		Player damaged = null;
+		Player damager = null;
+		if (pEvent.getDamager() instanceof Player)
+			damager = (Player) pEvent.getDamager();
+		else if (pEvent.getDamager() instanceof Projectile) {
+			ProjectileSource shooter = ((Projectile) pEvent.getDamager()).getShooter();
+			if (shooter instanceof Player) {
+				damager = (Player) (((Projectile) pEvent.getDamager()).getShooter());
+			}
+		}
+		if (pEvent.getEntity() instanceof Player)
+			damaged = (Player) pEvent.getEntity();
+		if (damaged != null && damager != null) {
 			if (enabledWorlds != null) {
 				if (!enabledWorlds.contains(Objects.requireNonNull(damager.getLocation().getWorld()).getName()))
 					return;
 			}
-			Player damaged = (Player) pEvent.getEntity();
 			String firstUUID = String.valueOf(damager.getUniqueId());
 			String secondUUID = String.valueOf(damaged.getUniqueId());
 			if (secondUUID.compareTo(firstUUID) > 0) {
@@ -74,12 +87,7 @@ public class DFFMain extends JavaPlugin implements Listener {
 				else
 					return;
 			}
-			Bukkit.getScheduler().runTaskLater(this, new Runnable() {
-				@Override
-				public void run() {
-					currentCache.remove(cacheIdentifier);
-				}
-			}, cacheTimer);
+			Bukkit.getScheduler().runTaskLater(this, () -> currentCache.remove(cacheIdentifier), cacheTimer);
 		}
 	}
 }
